@@ -1,0 +1,57 @@
+funcdef: 'def' NAME parameters ['->' test] ':' suite
+parameters: '(' [typedargslist] ')'
+typedargslist: (tfpdef ['=' test] (',' tfpdef ['=' test])* )
+tfpdef: NAME [':' test]
+suite: simple_stmt | NEWLINE INDENT stmt+ DEDENT
+stmt: simple_stmt | compound_stmt
+
+simple_stmt: small_stmt (';' small_stmt)* [';'] NEWLINE
+small_stmt: (expr_stmt | del_stmt | pass_stmt | flow_stmt)
+expr_stmt: testlist_star_expr ('=' testlist_star_expr)*
+testlist_star_expr: test (',' test)* [',']
+del_stmt: 'del' exprlist
+pass_stmt: 'pass'
+flow_stmt: break_stmt | continue_stmt | return_stmt
+break_stmt: 'break'
+continue_stmt: 'continue'
+return_stmt: 'return' [testlist]
+
+compound_stmt: if_stmt | while_stmt | for_stmt | funcdef
+
+if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
+while_stmt: 'while' test ':' suite
+for_stmt: 'for' exprlist 'in' testlist ':' suite
+
+test: or_test ['if' or_test 'else' test]
+test_nocond: or_test
+or_test: and_test ('or' and_test)*
+and_test: not_test ('and' not_test)*
+not_test: 'not' not_test | comparison
+comparison: expr (comp_op expr)*
+# <> isn't actually a valid comparison operator in Python. It's here for the
+# sake of a __future__ import described in PEP 401 (which really works :-)
+comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
+
+expr: xor_expr ('|' xor_expr)*
+xor_expr: and_expr ('^' and_expr)*
+and_expr: shift_expr ('&' shift_expr)*
+shift_expr: arith_expr (('<<'|'>>') arith_expr)*
+arith_expr: term (('+'|'-') term)*
+term: factor (('*'|'@'|'/'|'%'|'//') factor)*
+factor: ('+'|'-'|'~') factor | power
+power: atom_expr ['**' factor]
+atom_expr: atom trailer*
+atom: ('(' testlist ')' |
+       '[' [testlist] ']' |
+       '{' [dictorsetmaker] '}' |
+       NAME | NUMBER | STRING+ | 'None' | 'True' | 'False')
+trailer: '(' [arglist] ')' | '[' testlist ']' | '.' NAME
+exprlist: expr (',' expr)* [',']
+testlist: test (',' test)* [',']
+dictorsetmaker: (test ':' test) ((',' (test ':' test))* [','])
+
+arglist: test (',' test)*  [',']
+
+
+# not used in grammar, but may appear in "node" passed from Parser to Compiler
+encoding_decl: NAME
